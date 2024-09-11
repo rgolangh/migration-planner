@@ -94,9 +94,10 @@ func statusHandler(dataDir string, w http.ResponseWriter, r *http.Request) {
 }
 
 type Credentials struct {
-	URL      string `json:"url"`
-	Username string `json:"username"`
-	Password string `json:"password"`
+	URL                  string `json:"url"`
+	Username             string `json:"username"`
+	Password             string `json:"password"`
+	IsDataSharingAllowed string `json:"isDataSharingAllowed"`
 }
 
 func credentialHandler(log *log.PrefixLogger, dataDir string, w http.ResponseWriter, r *http.Request) {
@@ -109,13 +110,19 @@ func credentialHandler(log *log.PrefixLogger, dataDir string, w http.ResponseWri
 	}
 
 	if len(credentials.URL) == 0 || len(credentials.Username) == 0 || len(credentials.Password) == 0 {
-		http.Error(w, "Must pass url, username, and password", http.StatusBadRequest)
+		http.Error(w, "Must pass url, username, and password", http.StatusUnprocessableEntity)
 		return
 	}
 
+	// if there is empty vairable (it wasn't sent)
+	// return 400
+
 	log.Info("received credentials")
+	// net.DialTCP(url vcenter is alive)
+	// If no 422
 	err = testVmwareConnection(log, credentials)
 	if err != nil {
+		// if unauthorized 401
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -135,6 +142,7 @@ func credentialHandler(log *log.PrefixLogger, dataDir string, w http.ResponseWri
 }
 
 func testVmwareConnection(log *log.PrefixLogger, credentials Credentials) error {
+	//
 	u, err := soap.ParseURL(credentials.URL)
 	if err != nil {
 		return err
@@ -147,6 +155,8 @@ func testVmwareConnection(log *log.PrefixLogger, credentials Credentials) error 
 	defer cancel()
 	err = s.Login(ctx, c, nil)
 	if err != nil {
+		// unauthorized 401
+		// locked  StatusUnauthorized
 		return err
 	}
 	return s.Logout(ctx, c)
