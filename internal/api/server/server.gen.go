@@ -521,8 +521,13 @@ type GetSourceImageResponseObject interface {
 	VisitGetSourceImageResponse(w http.ResponseWriter) error
 }
 
+type GetSourceImage200ResponseHeaders struct {
+	ContentDisposition string
+}
+
 type GetSourceImage200ApplicationoctetStreamResponse struct {
 	Body          io.Reader
+	Headers       GetSourceImage200ResponseHeaders
 	ContentLength int64
 }
 
@@ -531,6 +536,7 @@ func (response GetSourceImage200ApplicationoctetStreamResponse) VisitGetSourceIm
 	if response.ContentLength != 0 {
 		w.Header().Set("Content-Length", fmt.Sprint(response.ContentLength))
 	}
+	w.Header().Set("Content-Disposition", fmt.Sprint(response.Headers.ContentDisposition))
 	w.WriteHeader(200)
 
 	if closer, ok := response.Body.(io.ReadCloser); ok {

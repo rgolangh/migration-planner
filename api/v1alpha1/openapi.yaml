@@ -175,6 +175,11 @@ paths:
               schema:
                 type: string
                 format: binary
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              required: true
         "400":
           description: Bad Request
           content:
